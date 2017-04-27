@@ -1,6 +1,6 @@
+
 pragma solidity ^0.4.8;
 import 'ds-token/token.sol';
-
 
 contract BATCrowdsale is DSAuth {
     DSToken BAT;
@@ -39,7 +39,7 @@ contract BATCrowdsale is DSAuth {
         var supply = BAT.totalSupply();
         done = true;
         ok = (minimum <= supply) && (supply <= limit);
-        if( ok ) {
+        if( ok ) { // create dev allocation and pop off token
             // TODO update with formula specified in original
             var reward = uint128(supply * custodianRatio / 100);
             BAT.mint(reward);
