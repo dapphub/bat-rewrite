@@ -40,6 +40,7 @@ contract BATCrowdsale is DSAuth {
         done = true;
         ok = (minimum <= supply) && (supply <= limit);
         if( ok ) {
+            // TODO update with formula specified in original
             var reward = uint128(supply * custodianRatio / 100);
             BAT.mint(reward);
             BAT.push(custodian, reward);
