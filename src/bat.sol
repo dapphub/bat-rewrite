@@ -1,7 +1,8 @@
 pragma solidity ^0.4.8;
 import 'ds-token/token.sol';
 
-contract BATCrowdsale {
+
+contract BATCrowdsale is DSAuth {
     DSToken BAT;
 
     address custodian;
@@ -15,7 +16,7 @@ contract BATCrowdsale {
 
     function BATCrowdsale(address custodian_, uint saleStart_, uint saleEnd_)
     {
-        BAT = new DSToken();
+        BAT = new DSToken("BAT", "Brave Access Token", 18);
         BAT.stop(); // Don't allow ERC20 actions until/unless sale succeeds
         custodian = custodian_;
         saleStart = saleStart_;
@@ -26,7 +27,10 @@ contract BATCrowdsale {
     {
         assert( saleStart <= now && now <= saleEnd );
         assert( BAT.totalSupply() + msg.value <= limit );
-        BAT.mint(msg.sender, msg.value);
+        // TODO if you want something other than 1:1, do conversion here
+        var payout = uint128(msg.value);
+        BAT.mint(payout);
+        BAT.push(msg.sender, payout);
     }
     function finalize()
         auth
@@ -36,18 +40,20 @@ contract BATCrowdsale {
         done = true;
         ok = (minimum <= supply) && (supply <= limit);
         if( ok ) {
-            var reward = supply * custodianRatio / 100;
-            BAT.mint(custodian, reward);
-            BAT.flow(); // re-enable ERC20 actions
+            var reward = uint128(supply * custodianRatio / 100);
+            BAT.mint(reward);
+            BAT.push(custodian, reward);
+            BAT.start(); // re-enable ERC20 actions
             BAT.setOwner(msg.sender);
         }
     }
     function refund()
     {
         assert( done && !ok );
-        var bal = BAT.balanceOf(msg.sender);
-        BAT.burn(msg.sender, bal);
-        msg.sender.call.value(bal)();
+        var bal = uint128(BAT.balanceOf(msg.sender));
+        BAT.pull(msg.sender, bal);
+        BAT.burn(bal);
+        assert( msg.sender.call.value(bal)() );
     }
 }
 
