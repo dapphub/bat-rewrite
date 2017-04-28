@@ -1,3 +1,4 @@
+// (C) 2016 DappHub, LLC
 
 pragma solidity ^0.4.8;
 
